@@ -27,14 +27,23 @@ const ProductDetailAction = ({ productState, setProductState, extraOption }) => 
   const account = localStorage.getItem('account');
   const userId = JSON.parse(account)?.user_id;
   const access_token = JSON.parse(account)?.access_token;
+  const [timerSpin, setTimerSpin] = useState(1);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+        setTimerSpin(prev => -prev)
+    }, 3000);
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
+
   const iframeRef = useCallback((iframe) => {
    if(iframe){
     const data = {
       type: "init",
       params: {
-        session_id: "<the session id>",
-        user_id: userId,
-        supermind_id: productState?.product?.id,
         auth_key: access_token
       }
     };
@@ -47,7 +56,7 @@ const ProductDetailAction = ({ productState, setProductState, extraOption }) => 
   const addToCart = () => {
     handleIncDec(productState?.productQty, productState?.product, false, false, false, productState);
   };
-  const { data: pointsData, isLoading: pointsDataLoading, refetch: refecthPointsData } = useQuery([PointAPI], () => request({ url: PointAPI, params: { paginate: 10 } }), {
+  const { data: pointsData, isLoading: pointsDataLoading, refetch: refecthPointsData } = useQuery([PointAPI, timerSpin], () => request({ url: PointAPI, params: { paginate: 10 } }), {
     select: (res) => res?.data,
   });
 
@@ -119,7 +128,7 @@ const ProductDetailAction = ({ productState, setProductState, extraOption }) => 
       </div>
       <AddToCartButton productState={productState} isLoading={isLoading} buyNow={buyNow} addToCart={addToCart} extraOption={extraOption} />
       <CustomModal modal={openChat} setModal={setOpenChat} fullscreen classes={{modalBodyClass: "full-modal", modalClass: 'theme-modal modal-xl', title: <ChatModalHeader productState={productState} pointData={pointsData} />}}>
-          <iframe ref={iframeRef} style={{width: "100%", height: "100%"}} src={`https://supermind-chat.gpt-autopilot.com/index.php?supermind_id=${productState?.product?.id}&user_id=${userId}`} title="Supermind chat box"></iframe>
+          <iframe ref={iframeRef} style={{width: "100%", height: "100%"}} src={`https://supermind-chat.gpt-autopilot.com/index.php?supermind_id=${productState?.product?.id}&user_id=${userId}`} allow='clipboard-write; picture-in-picture; microphone; fullscreen' title="Supermind chat box"></iframe>
           {/* {productState?.product?.type == "superpower" ? <SuperpowerChatBox productData={productState.product} /> : <ChatBox productData={productState.product} />} */}
       </CustomModal>
     </>
